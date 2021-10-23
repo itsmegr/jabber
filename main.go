@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"runtime"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -15,8 +17,25 @@ var upgrader = websocket.Upgrader{
     WriteBufferSize: 1024,
 }
 
+func NumberOfGoroutines(){
+    ticker := time.NewTicker(10 * time.Second)
+	defer func ()  {
+		ticker.Stop()
+	}()
+    done := make(chan bool)
+	for {
+            select {
+            case <-done:
+                return
+            case t := <-ticker.C:
+                fmt.Println("Tick at", t, runtime.NumGoroutine())
+            }
+    }
+}
+
 func handleClient(conn *websocket.Conn){
 	defer func ()  {
+		conn.Close()
 		fmt.Println("function returned from handleClient function")	
 	}()
 	for {
@@ -48,9 +67,9 @@ func groupHandler(resW http.ResponseWriter, reqR *http.Request){
 }
 
 func main() {
+	go NumberOfGoroutines()
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
-
 	r.HandleFunc("/group", groupHandler)
 	http.ListenAndServe(":8080", r)
 }
