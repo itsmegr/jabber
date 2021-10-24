@@ -2,7 +2,11 @@ package service
 
 import "log"
 
-// Group maintains the set of active clients and broadcasts messages to the
+/*
+	Group maintains the set of active clients and broadcasts messages to the each 
+	after receiving any msg from its client
+	Each group is isolated and independent from other
+*/
 type Group struct {
 	Name string
 	Hub *Hub
@@ -22,6 +26,10 @@ func NewGroup(name string) *Group {
 	}
 }
 
+/*
+	One Goroutine spinning all the time till its has client
+	as soon as number become client 0, it stops
+*/
 func (h *Group) Run() {
 	defer func ()  {
 		GlobalHub.Unregister <- h

@@ -2,6 +2,12 @@ package service
 
 import "log"
 
+
+/*
+	One Goroutine for Hub running all the time
+	GlobalHub represents complete application
+	Hub contains all the groups
+*/
 type Hub struct {
 	Groups map[*Group]bool
 	Register chan *Group

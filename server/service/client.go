@@ -31,23 +31,19 @@ var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 }
-
-// Client is a middleman between the websocket connection and the group.
 type Client struct {
 	Name string
 	Group *Group
-
-	// The websocket connection.
 	Conn *websocket.Conn
-
-	// Buffered channel of outbound messages.
+	// channel to receive msg to client, broacasted from group
 	Send chan []byte
 }
-
-// readPump pumps messages from the websocket connection to the group.
-// The application runs readPump in a per-connection goroutine. The application
-// ensures that there is at most one reader on a connection by executing all
-// reads from this goroutine.
+/*
+	readPump pumps messages from the websocket connection to the group.
+	The application runs readPump in a per-connection goroutine. The application
+	ensures that there is at most one reader on a connection by executing all
+	reads from this goroutine.
+*/
 func (c *Client) ReadPump() {
 	defer func() {
 		c.Conn.Close()
@@ -70,11 +66,12 @@ func (c *Client) ReadPump() {
 	}
 }
 
-// writePump pumps messages from the group to the websocket connection.
-//
-// A goroutine running writePump is started for each connection. The
-// application ensures that there is at most one writer to a connection by
-// executing all writes from this goroutine.
+/*
+	writePump pumps messages from the group to the websocket connection.
+	A goroutine running writePump is started for each connection. The
+	application ensures that there is at most one writer to a connection by
+	executing all writes from this goroutine.
+*/
 func (c *Client) WritePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
@@ -98,9 +95,11 @@ func (c *Client) WritePump() {
 			}
 			w.Write(message)
 
-			// Add queued chat messages to the current websocket message.
-			//for better performance
-			//this will be automatically handled in another iterations
+			/*
+				Add queued chat messages to the current websocket message.
+				for better performance
+				this will be automatically handled in another iterations
+			*/
 			n := len(c.Send)
 			for i := 0; i < n; i++ {
 				w.Write(newline)
@@ -118,23 +117,6 @@ func (c *Client) WritePump() {
 		}
 	}
 }
-
-// serveWs handles websocket requests from the peer.
-// func serveWs(group *Group, w http.ResponseWriter, r *http.Request) {
-// 	conn, err := upgrader.Upgrade(w, r, nil)
-// 	if err != nil {
-// 		log.Println(err)
-// 		return
-// 	}
-// 	client := &Client{group: group, conn: conn, send: make(chan []byte, 256)}
-// 	client.group.register <- client
-
-// 	// Allow collection of memory referenced by the caller by doing all work in
-// 	// new goroutines.
-// 	go client.writePump()
-// 	go client.readPump()
-// }
-
 /*
 	PING and PONG messages are described in the RFC. In summary, peers (including the browser) 
 	automatically respond to a PING message with a PONG message.

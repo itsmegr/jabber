@@ -41,7 +41,7 @@ func JoinHandler(w http.ResponseWriter, r *http.Request){
 	groupName := queryParams.Get("group")
 	clientName := queryParams.Get("name")
 
-
+	// allowing the origin to establish connections
 	upgrader.CheckOrigin = func(r *http.Request) bool {return true}
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -55,6 +55,7 @@ func JoinHandler(w http.ResponseWriter, r *http.Request){
 		Send: make(chan []byte, 256),
 	}
 	client.Group.Register <- client
+	// spawning 2 go routines per client, 1 for writing and other fo reading
 	go client.WritePump()
 	go client.ReadPump()
 }
