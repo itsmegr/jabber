@@ -57,8 +57,6 @@ func JoinHandler(w http.ResponseWriter, r *http.Request){
 	client.Group.Register <- client
 	go client.WritePump()
 	go client.ReadPump()
-	// // fmt.Println(groupName, clientName)
-	// w.Write([]byte(fmt.Sprintf("%v, %v", groupName, clientName)))
 }
 
 

@@ -1,5 +1,7 @@
 package service
 
+import "log"
+
 // Group maintains the set of active clients and broadcasts messages to the
 type Group struct {
 	Name string
@@ -22,22 +24,23 @@ func NewGroup(name string) *Group {
 
 func (h *Group) Run() {
 	defer func ()  {
-		//delete the group from groupList in Hub
-		h.Hub.Unregister <- h
+		GlobalHub.Unregister <- h
 	}()
 	for {
 		select {
 		case client := <-h.Register:
 			h.Clients[client] = true
+			log.Printf("Client: %v, Joined Group: %v", client.Name, h.Name)
 		case client := <-h.Unregister:
 			if _, ok := h.Clients[client]; ok {
 				delete(h.Clients, client)
 				close(client.Send)
+				log.Printf("Client: %v, Disconnected From Group: %v", client.Name, h.Name)
 			}
 			//check here if there is any client or not, if not then delete the group
 			if len(h.Clients)==0 {
 				//delete the group from groupList in Hub
-				h.Hub.Unregister <- h
+				GlobalHub.Unregister <- h
 				return
 			}
 		case message := <-h.Broadcast:

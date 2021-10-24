@@ -2,9 +2,6 @@ package service
 
 import (
 	"bytes"
-	"log"
-
-	// "net/http"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -52,8 +49,8 @@ type Client struct {
 // reads from this goroutine.
 func (c *Client) ReadPump() {
 	defer func() {
-		c.Group.Unregister <- c
 		c.Conn.Close()
+		c.Group.Unregister <- c
 	}()
 	c.Conn.SetReadLimit(maxMessageSize)
 	c.Conn.SetReadDeadline(time.Now().Add(pongWait))
@@ -61,9 +58,9 @@ func (c *Client) ReadPump() {
 	for {
 		_, message, err := c.Conn.ReadMessage()
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error: %v", err)
-			}
+			// if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+			// 	log.Printf("Client Disconected: Closing connection", err)
+			// }
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
@@ -81,6 +78,7 @@ func (c *Client) WritePump() {
 	defer func() {
 		ticker.Stop()
 		c.Conn.Close()
+		c.Group.Unregister <- c
 	}()
 	for {
 		select {
