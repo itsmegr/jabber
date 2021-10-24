@@ -1,4 +1,23 @@
 [
+    {
+    "intro": {
+      "method": "WS CONNECT",
+      "endpoint": "/join",
+      "description": "This is request for establishing websocket connection with server.\n",
+      "example" : "ws://localhost:8080/join?name=govind&group=orted"
+    },
+    "body": "",
+    "params": [
+      { "kei": "group", "value": "Enter group name" },
+      { "kei": "name", "value": "Enter yoou name" }
+    ],
+    "headers": [
+      { "kei": "Connection", "value": "upgrade" },
+      { "kei": "Upgarde", "value": "websocket" }
+    ],
+    "responses": "websocket connection will be established",
+    "errors": [{ "kei": "status", "value": "400" }]
+  },
   {
     "intro": {
       "method": "GET",
@@ -12,24 +31,6 @@
       { "kei": "total_active_groups", "value": "Number of active Groups" },
       { "kei": "total_active_members", "value": "Number of active users" }
     ],
-    "errors": []
-  },
-  {
-    "intro": {
-      "method": "WS CONNECT",
-      "endpoint": "/join",
-      "description": "This is request for establishing websocket connection with server.\n"
-    },
-    "body": "",
-    "params": [
-      { "kei": "group", "value": "Enter group name" },
-      { "kei": "name", "value": "Enter yoou name" }
-    ],
-    "headers": [
-      { "kei": "Connection", "value": "upgrade" },
-      { "kei": "Upgarde", "value": "websocket" }
-    ],
-    "responses": [{ "kei": "status code", "value": "100" }],
     "errors": []
   }
 ]

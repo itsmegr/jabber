@@ -40,6 +40,10 @@ func JoinHandler(w http.ResponseWriter, r *http.Request){
 	queryParams := r.URL.Query();
 	groupName := queryParams.Get("group")
 	clientName := queryParams.Get("name")
+	if groupName=="" || clientName == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 	// allowing the origin to establish connections
 	upgrader.CheckOrigin = func(r *http.Request) bool {return true}
