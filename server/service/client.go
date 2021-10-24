@@ -1,9 +1,9 @@
-package internal
-
+package service
 
 import (
 	"bytes"
 	"log"
+
 	// "net/http"
 	"time"
 
@@ -36,13 +36,14 @@ var upgrader = websocket.Upgrader{
 
 // Client is a middleman between the websocket connection and the group.
 type Client struct {
-	group *Group
+	Name string
+	Group *Group
 
 	// The websocket connection.
-	conn *websocket.Conn
+	Conn *websocket.Conn
 
 	// Buffered channel of outbound messages.
-	send chan []byte
+	Send chan []byte
 }
 
 // readPump pumps messages from the websocket connection to the group.
@@ -51,14 +52,14 @@ type Client struct {
 // reads from this goroutine.
 func (c *Client) readPump() {
 	defer func() {
-		c.group.unregister <- c
-		c.conn.Close()
+		c.Group.Unregister <- c
+		c.Conn.Close()
 	}()
-	c.conn.SetReadLimit(maxMessageSize)
-	c.conn.SetReadDeadline(time.Now().Add(pongWait))
-	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+	c.Conn.SetReadLimit(maxMessageSize)
+	c.Conn.SetReadDeadline(time.Now().Add(pongWait))
+	c.Conn.SetPongHandler(func(string) error { c.Conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
-		_, message, err := c.conn.ReadMessage()
+		_, message, err := c.Conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error: %v", err)
@@ -66,7 +67,7 @@ func (c *Client) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.group.broadcast <- message
+		c.Group.Broadcast <- message
 	}
 }
 
@@ -79,19 +80,19 @@ func (c *Client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
-		c.conn.Close()
+		c.Conn.Close()
 	}()
 	for {
 		select {
-		case message, ok := <-c.send:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+		case message, ok := <-c.Send:
+			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				// The group closed the channel.
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 
-			w, err := c.conn.NextWriter(websocket.TextMessage)
+			w, err := c.Conn.NextWriter(websocket.TextMessage)
 			if err != nil {
 				return
 			}
@@ -100,18 +101,18 @@ func (c *Client) writePump() {
 			// Add queued chat messages to the current websocket message.
 			//for better performance
 			//this will be automatically handled in another iterations
-			n := len(c.send)
+			n := len(c.Send)
 			for i := 0; i < n; i++ {
 				w.Write(newline)
-				w.Write(<-c.send)
+				w.Write(<-c.Send)
 			}
 
 			if err := w.Close(); err != nil {
 				return
 			}
 		case <-ticker.C:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := c.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
 			}
 		}
