@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"fmt"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -64,6 +65,7 @@ func (c *Client) ReadPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
+		message = []byte(fmt.Sprintf("%v sent : %v", c.Name, string(message)))
 		c.Group.Broadcast <- message
 	}
 }
