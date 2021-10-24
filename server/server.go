@@ -26,6 +26,7 @@ func joinRouter() http.Handler {
 // set all the routers for server
 func SetRouters(router *chi.Mux){
 	router.Mount("/join", joinRouter())
+	router.Get("/stats", handlers.StatsHandler)
 }
 
 // return new main/global router
