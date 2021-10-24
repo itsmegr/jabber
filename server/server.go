@@ -2,7 +2,6 @@ package server
 
 import (
 	"jabber/server/handlers"
-	"jabber/server/service"
 	"net/http"
 
 	"github.com/go-chi/chi/middleware"

@@ -10,7 +10,7 @@ type Group struct {
 	Unregister chan *Client
 }
 
-func newGroup(name string) *Group {
+func NewGroup(name string) *Group {
 	return &Group{
 		Name: name,
 		Broadcast:  make(chan []byte),
@@ -20,7 +20,7 @@ func newGroup(name string) *Group {
 	}
 }
 
-func (h *Group) run() {
+func (h *Group) Run() {
 	defer func ()  {
 		//delete the group from groupList in Hub
 		h.Hub.Unregister <- h
